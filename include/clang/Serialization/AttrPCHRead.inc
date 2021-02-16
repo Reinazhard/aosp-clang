@@ -278,7 +278,12 @@
     bool isImplicit = Record.readInt();
     bool isPackExpansion = Record.readInt();
     std::string annotation= Record.readString();
-    New = new (Context) AnnotateAttr(Context, Info, annotation);
+    unsigned argsSize = Record.readInt();
+    SmallVector<Expr *, 4> args;
+    args.reserve(argsSize);
+    for (unsigned i = 0; i != argsSize; ++i)
+      args.push_back(Record.readExpr());
+    New = new (Context) AnnotateAttr(Context, Info, annotation, args.data(), argsSize);
     cast<InheritableAttr>(New)->setInherited(isInherited);
     New->setImplicit(isImplicit);
     New->setPackExpansion(isPackExpansion);
@@ -2856,6 +2861,16 @@
     bool isImplicit = Record.readInt();
     bool isPackExpansion = Record.readInt();
     New = new (Context) StdCallAttr(Context, Info);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    New->setPackExpansion(isPackExpansion);
+    break;
+  }
+  case attr::StrictFP: {
+    bool isInherited = Record.readInt();
+    bool isImplicit = Record.readInt();
+    bool isPackExpansion = Record.readInt();
+    New = new (Context) StrictFPAttr(Context, Info);
     cast<InheritableAttr>(New)->setInherited(isInherited);
     New->setImplicit(isImplicit);
     New->setPackExpansion(isPackExpansion);

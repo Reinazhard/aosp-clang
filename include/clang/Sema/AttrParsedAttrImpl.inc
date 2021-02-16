@@ -826,7 +826,7 @@ struct ParsedAttrInfoAnnotate final : public ParsedAttrInfo {
   ParsedAttrInfoAnnotate() {
     AttrKind = ParsedAttr::AT_Annotate;
     NumArgs = 1;
-    OptArgs = 0;
+    OptArgs = 15;
     HasCustomParsing = 0;
     IsTargetSpecific = 0;
     IsType = 0;
@@ -2777,7 +2777,7 @@ bool diagAppertainsToDecl(Sema &S, const ParsedAttr &Attr, const Decl *D) const 
 
 bool existsInTarget(const TargetInfo &Target) const override {
   const llvm::Triple &T = Target.getTriple(); (void)T;
-  return true && (T.getArch() == llvm::Triple::x86 || T.getArch() == llvm::Triple::x86_64 || T.getArch() == llvm::Triple::arm || T.getArch() == llvm::Triple::thumb || T.getArch() == llvm::Triple::aarch64) && (T.getOS() == llvm::Triple::Win32);
+  return true && ( Target.getTriple().hasDLLImportExport() );
 }
 
 void getPragmaAttributeMatchRules(llvm::SmallVectorImpl<std::pair<attr::SubjectMatchRule, bool>> &MatchRules, const LangOptions &LangOpts) const override {
@@ -2813,7 +2813,7 @@ bool diagAppertainsToDecl(Sema &S, const ParsedAttr &Attr, const Decl *D) const 
 
 bool existsInTarget(const TargetInfo &Target) const override {
   const llvm::Triple &T = Target.getTriple(); (void)T;
-  return true && (T.getArch() == llvm::Triple::x86 || T.getArch() == llvm::Triple::x86_64 || T.getArch() == llvm::Triple::arm || T.getArch() == llvm::Triple::thumb || T.getArch() == llvm::Triple::aarch64) && (T.getOS() == llvm::Triple::Win32);
+  return true && ( Target.getTriple().hasDLLImportExport() );
 }
 
 static const ParsedAttrInfoDLLExportStaticLocal Instance;
@@ -2849,7 +2849,7 @@ bool diagAppertainsToDecl(Sema &S, const ParsedAttr &Attr, const Decl *D) const 
 
 bool existsInTarget(const TargetInfo &Target) const override {
   const llvm::Triple &T = Target.getTriple(); (void)T;
-  return true && (T.getArch() == llvm::Triple::x86 || T.getArch() == llvm::Triple::x86_64 || T.getArch() == llvm::Triple::arm || T.getArch() == llvm::Triple::thumb || T.getArch() == llvm::Triple::aarch64) && (T.getOS() == llvm::Triple::Win32);
+  return true && ( Target.getTriple().hasDLLImportExport() );
 }
 
 void getPragmaAttributeMatchRules(llvm::SmallVectorImpl<std::pair<attr::SubjectMatchRule, bool>> &MatchRules, const LangOptions &LangOpts) const override {
@@ -2885,7 +2885,7 @@ bool diagAppertainsToDecl(Sema &S, const ParsedAttr &Attr, const Decl *D) const 
 
 bool existsInTarget(const TargetInfo &Target) const override {
   const llvm::Triple &T = Target.getTriple(); (void)T;
-  return true && (T.getArch() == llvm::Triple::x86 || T.getArch() == llvm::Triple::x86_64 || T.getArch() == llvm::Triple::arm || T.getArch() == llvm::Triple::thumb || T.getArch() == llvm::Triple::aarch64) && (T.getOS() == llvm::Triple::Win32);
+  return true && ( Target.getTriple().hasDLLImportExport() );
 }
 
 static const ParsedAttrInfoDLLImportStaticLocal Instance;
@@ -3706,7 +3706,7 @@ struct ParsedAttrInfoInitPriority final : public ParsedAttrInfo {
     NumArgs = 1;
     OptArgs = 0;
     HasCustomParsing = 0;
-    IsTargetSpecific = 0;
+    IsTargetSpecific = 1;
     IsType = 0;
     IsStmt = 0;
     IsKnownToGCC = 1;
@@ -3720,6 +3720,11 @@ bool diagAppertainsToDecl(Sema &S, const ParsedAttr &Attr, const Decl *D) const 
     return false;
   }
   return true;
+}
+
+bool existsInTarget(const TargetInfo &Target) const override {
+  const llvm::Triple &T = Target.getTriple(); (void)T;
+  return true && ( !Target.getTriple().isOSzOS() );
 }
 
 void getPragmaAttributeMatchRules(llvm::SmallVectorImpl<std::pair<attr::SubjectMatchRule, bool>> &MatchRules, const LangOptions &LangOpts) const override {
@@ -8865,6 +8870,30 @@ struct ParsedAttrInfoStdCall final : public ParsedAttrInfo {
 static const ParsedAttrInfoStdCall Instance;
 };
 const ParsedAttrInfoStdCall ParsedAttrInfoStdCall::Instance;
+struct ParsedAttrInfoStrictFP final : public ParsedAttrInfo {
+  ParsedAttrInfoStrictFP() {
+    AttrKind = ParsedAttr::AT_StrictFP;
+    NumArgs = 0;
+    OptArgs = 0;
+    HasCustomParsing = 0;
+    IsTargetSpecific = 0;
+    IsType = 0;
+    IsStmt = 0;
+    IsKnownToGCC = 0;
+    IsSupportedByPragmaAttribute = 0;
+  }
+bool diagAppertainsToDecl(Sema &S, const ParsedAttr &Attr, const Decl *D) const override {
+  if (!isa<FunctionDecl>(D)) {
+    S.Diag(Attr.getLoc(), diag::warn_attribute_wrong_decl_type_str)
+      << Attr << "functions";
+    return false;
+  }
+  return true;
+}
+
+static const ParsedAttrInfoStrictFP Instance;
+};
+const ParsedAttrInfoStrictFP ParsedAttrInfoStrictFP::Instance;
 static constexpr ParsedAttrInfo::Spelling SuppressSpellings[] = {
   {AttributeCommonInfo::AS_CXX11, "gsl::suppress"},
 };
@@ -10744,6 +10773,7 @@ static const ParsedAttrInfo *AttrInfoMap[] = {
 &ParsedAttrInfoSharedTrylockFunction::Instance,
 &ParsedAttrInfoSpeculativeLoadHardening::Instance,
 &ParsedAttrInfoStdCall::Instance,
+&ParsedAttrInfoStrictFP::Instance,
 &ParsedAttrInfoSuppress::Instance,
 &ParsedAttrInfoSwiftBridge::Instance,
 &ParsedAttrInfoSwiftBridgedTypedef::Instance,

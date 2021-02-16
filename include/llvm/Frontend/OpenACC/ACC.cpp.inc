@@ -205,7 +205,6 @@ namespace acc {
     llvm::acc::Clause::ACCC_default,
     llvm::acc::Clause::ACCC_gang,
     llvm::acc::Clause::ACCC_if,
-    llvm::acc::Clause::ACCC_independent,
     llvm::acc::Clause::ACCC_num_gangs,
     llvm::acc::Clause::ACCC_num_workers,
     llvm::acc::Clause::ACCC_reduction,
@@ -424,6 +423,9 @@ namespace acc {
   };
 
   static AccClauseSet allowedOnceClauses_ACCD_set {
+    llvm::acc::Clause::ACCC_default_async,
+    llvm::acc::Clause::ACCC_device_num,
+    llvm::acc::Clause::ACCC_device_type,
     llvm::acc::Clause::ACCC_if,
   };
 

@@ -34,9 +34,13 @@
 #include <utility>
 #include <vector>
 
+// ANDROID x86_64 defined the FS macro
+#undef FS
+
 namespace llvm {
 
 class MemoryBuffer;
+class MemoryBufferRef;
 class Twine;
 
 namespace vfs {
@@ -463,7 +467,8 @@ public:
   /// false if the file or directory already exists in the file system with
   /// different contents.
   bool addFileNoOwn(const Twine &Path, time_t ModificationTime,
-                    llvm::MemoryBuffer *Buffer, Optional<uint32_t> User = None,
+                    const llvm::MemoryBufferRef &Buffer,
+                    Optional<uint32_t> User = None,
                     Optional<uint32_t> Group = None,
                     Optional<llvm::sys::fs::file_type> Type = None,
                     Optional<llvm::sys::fs::perms> Perms = None);

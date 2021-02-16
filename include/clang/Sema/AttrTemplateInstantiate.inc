@@ -1243,6 +1243,10 @@ Attr *instantiateTemplateAttribute(const Attr *At, ASTContext &C, Sema &S,
       const auto *A = cast<StdCallAttr>(At);
       return A->clone(C);
     }
+    case attr::StrictFP: {
+      const auto *A = cast<StrictFPAttr>(At);
+      return A->clone(C);
+    }
     case attr::Suppress: {
       const auto *A = cast<SuppressAttr>(At);
       return A->clone(C);
@@ -2269,6 +2273,9 @@ Attr *instantiateTemplateAttributeForDecl(const Attr *At,
       return nullptr;
     }
     case attr::StdCall: {
+      return nullptr;
+    }
+    case attr::StrictFP: {
       return nullptr;
     }
     case attr::Suppress: {

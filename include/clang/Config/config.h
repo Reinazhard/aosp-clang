@@ -64,7 +64,7 @@
 #define CLANG_HAVE_RLIMITS 1
 
 /* The LLVM product name and version */
-#define BACKEND_PACKAGE_STRING "LLVM 12.0.2git"
+#define BACKEND_PACKAGE_STRING "LLVM 12.0.3git"
 
 /* Linker version detected at compile time. */
 /* #undef HOST_LINK_VERSION */
@@ -74,9 +74,6 @@
 
 /* enable x86 relax relocations by default */
 #define ENABLE_X86_RELAX_RELOCATIONS 1
-
-/* Enable the experimental new pass manager by default */
-#define ENABLE_EXPERIMENTAL_NEW_PASS_MANAGER 0
 
 /* Enable each functionality of modules */
 #define CLANG_ENABLE_ARCMT 1

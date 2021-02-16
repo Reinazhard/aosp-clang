@@ -795,6 +795,14 @@ public:
     return isAndroid() || isOSOpenBSD() || isWindowsCygwinEnvironment();
   }
 
+  /// Tests whether the target uses -data-sections as default.
+  bool hasDefaultDataSections() const {
+    return isOSBinFormatXCOFF() || isWasm();
+  }
+
+  /// Tests if the environment supports dllimport/export annotations.
+  bool hasDLLImportExport() const { return isOSWindows() || isPS4CPU(); }
+
   /// @}
   /// @name Mutators
   /// @{

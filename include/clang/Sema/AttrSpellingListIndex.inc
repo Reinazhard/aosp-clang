@@ -2203,6 +2203,9 @@
         return 4;
     break;
   }
+  case AT_StrictFP: {
+    break;
+  }
   case AT_Suppress: {
     if (Name == "suppress" && getSyntax() == AttributeCommonInfo::AS_CXX11 && Scope == "gsl")
         return 0;

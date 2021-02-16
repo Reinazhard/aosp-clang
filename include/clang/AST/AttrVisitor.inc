@@ -1076,6 +1076,10 @@
   bool VisitStdCallAttr(StdCallAttr *A) {
     return true; 
   }
+  bool TraverseStrictFPAttr(StrictFPAttr *A);
+  bool VisitStrictFPAttr(StrictFPAttr *A) {
+    return true; 
+  }
   bool TraverseSuppressAttr(SuppressAttr *A);
   bool VisitSuppressAttr(SuppressAttr *A) {
     return true; 
@@ -1533,6 +1537,14 @@ bool VISITORCLASS<Derived>::TraverseAnnotateAttr(AnnotateAttr *A) {
     return false;
   if (!getDerived().VisitAnnotateAttr(A))
     return false;
+  {
+    Expr * *I = A->args_begin();
+    Expr * *E = A->args_end();
+    for (; I != E; ++I) {
+      if (!getDerived().TraverseStmt(*I))
+        return false;
+    }
+  }
   return true;
 }
 
@@ -3869,6 +3881,15 @@ bool VISITORCLASS<Derived>::TraverseStdCallAttr(StdCallAttr *A) {
 }
 
 template <typename Derived>
+bool VISITORCLASS<Derived>::TraverseStrictFPAttr(StrictFPAttr *A) {
+  if (!getDerived().VisitAttr(A))
+    return false;
+  if (!getDerived().VisitStrictFPAttr(A))
+    return false;
+  return true;
+}
+
+template <typename Derived>
 bool VISITORCLASS<Derived>::TraverseSuppressAttr(SuppressAttr *A) {
   if (!getDerived().VisitAttr(A))
     return false;
@@ -4874,6 +4895,8 @@ bool VISITORCLASS<Derived>::TraverseAttr(Attr *A) {
       return getDerived().TraverseSpeculativeLoadHardeningAttr(cast<SpeculativeLoadHardeningAttr>(A));
     case attr::StdCall:
       return getDerived().TraverseStdCallAttr(cast<StdCallAttr>(A));
+    case attr::StrictFP:
+      return getDerived().TraverseStrictFPAttr(cast<StrictFPAttr>(A));
     case attr::Suppress:
       return getDerived().TraverseSuppressAttr(cast<SuppressAttr>(A));
     case attr::SwiftBridge:

@@ -15,6 +15,16 @@ set_target_properties(clangBasic PROPERTIES
 list(APPEND _IMPORT_CHECK_TARGETS clangBasic )
 list(APPEND _IMPORT_CHECK_FILES_FOR_clangBasic "${_IMPORT_PREFIX}/lib64/libclangBasic.a" )
 
+# Import target "clangAPINotes" for configuration "Release"
+set_property(TARGET clangAPINotes APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
+set_target_properties(clangAPINotes PROPERTIES
+  IMPORTED_LINK_INTERFACE_LANGUAGES_RELEASE "CXX"
+  IMPORTED_LOCATION_RELEASE "${_IMPORT_PREFIX}/lib64/libclangAPINotes.a"
+  )
+
+list(APPEND _IMPORT_CHECK_TARGETS clangAPINotes )
+list(APPEND _IMPORT_CHECK_FILES_FOR_clangAPINotes "${_IMPORT_PREFIX}/lib64/libclangAPINotes.a" )
+
 # Import target "clangLex" for configuration "Release"
 set_property(TARGET clangLex APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
 set_target_properties(clangLex PROPERTIES
@@ -581,6 +591,16 @@ set_target_properties(clangTidyCERTModule PROPERTIES
 
 list(APPEND _IMPORT_CHECK_TARGETS clangTidyCERTModule )
 list(APPEND _IMPORT_CHECK_FILES_FOR_clangTidyCERTModule "${_IMPORT_PREFIX}/lib64/libclangTidyCERTModule.a" )
+
+# Import target "clangTidyConcurrencyModule" for configuration "Release"
+set_property(TARGET clangTidyConcurrencyModule APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
+set_target_properties(clangTidyConcurrencyModule PROPERTIES
+  IMPORTED_LINK_INTERFACE_LANGUAGES_RELEASE "CXX"
+  IMPORTED_LOCATION_RELEASE "${_IMPORT_PREFIX}/lib64/libclangTidyConcurrencyModule.a"
+  )
+
+list(APPEND _IMPORT_CHECK_TARGETS clangTidyConcurrencyModule )
+list(APPEND _IMPORT_CHECK_FILES_FOR_clangTidyConcurrencyModule "${_IMPORT_PREFIX}/lib64/libclangTidyConcurrencyModule.a" )
 
 # Import target "clangTidyCppCoreGuidelinesModule" for configuration "Release"
 set_property(TARGET clangTidyCppCoreGuidelinesModule APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)

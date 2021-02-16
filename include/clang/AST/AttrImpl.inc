@@ -2113,29 +2113,42 @@ const char *AnalyzerNoReturnAttr::getSpelling() const {
 
 // AnnotateAttr implementation
 
-AnnotateAttr *AnnotateAttr::CreateImplicit(ASTContext &Ctx, llvm::StringRef Annotation, const AttributeCommonInfo &CommonInfo) {
-  auto *A = new (Ctx) AnnotateAttr(Ctx, CommonInfo, Annotation);
+AnnotateAttr *AnnotateAttr::CreateImplicit(ASTContext &Ctx, llvm::StringRef Annotation, Expr * *Args, unsigned ArgsSize, const AttributeCommonInfo &CommonInfo) {
+  auto *A = new (Ctx) AnnotateAttr(Ctx, CommonInfo, Annotation, Args, ArgsSize);
   A->setImplicit(true);
   if (!A->isAttributeSpellingListCalculated() && !A->getAttrName())
     A->setAttributeSpellingListIndex(0);
   return A;
 }
 
-AnnotateAttr *AnnotateAttr::Create(ASTContext &Ctx, llvm::StringRef Annotation, const AttributeCommonInfo &CommonInfo) {
-  auto *A = new (Ctx) AnnotateAttr(Ctx, CommonInfo, Annotation);
+AnnotateAttr *AnnotateAttr::Create(ASTContext &Ctx, llvm::StringRef Annotation, Expr * *Args, unsigned ArgsSize, const AttributeCommonInfo &CommonInfo) {
+  auto *A = new (Ctx) AnnotateAttr(Ctx, CommonInfo, Annotation, Args, ArgsSize);
   if (!A->isAttributeSpellingListCalculated() && !A->getAttrName())
     A->setAttributeSpellingListIndex(0);
   return A;
 }
 
-AnnotateAttr *AnnotateAttr::CreateImplicit(ASTContext &Ctx, llvm::StringRef Annotation, SourceRange Range, AttributeCommonInfo::Syntax Syntax) {
+AnnotateAttr *AnnotateAttr::CreateImplicit(ASTContext &Ctx, llvm::StringRef Annotation, Expr * *Args, unsigned ArgsSize, SourceRange Range, AttributeCommonInfo::Syntax Syntax) {
   AttributeCommonInfo I(Range, NoSemaHandlerAttribute, Syntax);
-  return CreateImplicit(Ctx, Annotation, I);
+  return CreateImplicit(Ctx, Annotation, Args, ArgsSize, I);
 }
 
-AnnotateAttr *AnnotateAttr::Create(ASTContext &Ctx, llvm::StringRef Annotation, SourceRange Range, AttributeCommonInfo::Syntax Syntax) {
+AnnotateAttr *AnnotateAttr::Create(ASTContext &Ctx, llvm::StringRef Annotation, Expr * *Args, unsigned ArgsSize, SourceRange Range, AttributeCommonInfo::Syntax Syntax) {
   AttributeCommonInfo I(Range, NoSemaHandlerAttribute, Syntax);
-  return Create(Ctx, Annotation, I);
+  return Create(Ctx, Annotation, Args, ArgsSize, I);
+}
+
+AnnotateAttr::AnnotateAttr(ASTContext &Ctx, const AttributeCommonInfo &CommonInfo
+              , llvm::StringRef Annotation
+              , Expr * *Args, unsigned ArgsSize
+             )
+  : InheritableParamAttr(Ctx, CommonInfo, attr::Annotate, false, false)
+              , annotationLength(Annotation.size()),annotation(new (Ctx, 1) char[annotationLength])
+              , args_Size(ArgsSize), args_(new (Ctx, 16) Expr *[args_Size])
+  {
+    if (!Annotation.empty())
+      std::memcpy(annotation, Annotation.data(), annotationLength);
+  std::copy(Args, Args + args_Size, args_);
 }
 
 AnnotateAttr::AnnotateAttr(ASTContext &Ctx, const AttributeCommonInfo &CommonInfo
@@ -2143,6 +2156,7 @@ AnnotateAttr::AnnotateAttr(ASTContext &Ctx, const AttributeCommonInfo &CommonInf
              )
   : InheritableParamAttr(Ctx, CommonInfo, attr::Annotate, false, false)
               , annotationLength(Annotation.size()),annotation(new (Ctx, 1) char[annotationLength])
+              , args_Size(0), args_(nullptr)
   {
     if (!Annotation.empty())
       std::memcpy(annotation, Annotation.data(), annotationLength);
@@ -2150,8 +2164,10 @@ AnnotateAttr::AnnotateAttr(ASTContext &Ctx, const AttributeCommonInfo &CommonInf
 
 
 
+
+
 AnnotateAttr *AnnotateAttr::clone(ASTContext &C) const {
-  auto *A = new (C) AnnotateAttr(C, *this, getAnnotation());
+  auto *A = new (C) AnnotateAttr(C, *this, getAnnotation(), args_, args_Size);
   A->Inherited = Inherited;
   A->IsPackExpansion = IsPackExpansion;
   A->setImplicit(Implicit);
@@ -2164,15 +2180,36 @@ void AnnotateAttr::printPretty(raw_ostream &OS, const PrintingPolicy &Policy) co
     llvm_unreachable("Unknown attribute spelling!");
     break;
   case 0 : {
-    OS << " __attribute__((annotate(\"" << getAnnotation() << "\")))";
+    OS << " __attribute__((annotate(\"" << getAnnotation() << "\", ";
+  bool isFirst = true;
+  for (const auto &Val : args()) {
+    if (isFirst) isFirst = false;
+    else OS << ", ";
+    OS << Val;
+  }
+  OS << ")))";
     break;
   }
   case 1 : {
-    OS << " [[clang::annotate(\"" << getAnnotation() << "\")]]";
+    OS << " [[clang::annotate(\"" << getAnnotation() << "\", ";
+  bool isFirst = true;
+  for (const auto &Val : args()) {
+    if (isFirst) isFirst = false;
+    else OS << ", ";
+    OS << Val;
+  }
+  OS << ")]]";
     break;
   }
   case 2 : {
-    OS << " [[clang::annotate(\"" << getAnnotation() << "\")]]";
+    OS << " [[clang::annotate(\"" << getAnnotation() << "\", ";
+  bool isFirst = true;
+  for (const auto &Val : args()) {
+    if (isFirst) isFirst = false;
+    else OS << ", ";
+    OS << Val;
+  }
+  OS << ")]]";
     break;
   }
 }
@@ -22121,6 +22158,55 @@ const char *StdCallAttr::getSpelling() const {
 }
 
 
+// StrictFPAttr implementation
+
+StrictFPAttr *StrictFPAttr::CreateImplicit(ASTContext &Ctx, const AttributeCommonInfo &CommonInfo) {
+  auto *A = new (Ctx) StrictFPAttr(Ctx, CommonInfo);
+  A->setImplicit(true);
+  if (!A->isAttributeSpellingListCalculated() && !A->getAttrName())
+    A->setAttributeSpellingListIndex(0);
+  return A;
+}
+
+StrictFPAttr *StrictFPAttr::Create(ASTContext &Ctx, const AttributeCommonInfo &CommonInfo) {
+  auto *A = new (Ctx) StrictFPAttr(Ctx, CommonInfo);
+  if (!A->isAttributeSpellingListCalculated() && !A->getAttrName())
+    A->setAttributeSpellingListIndex(0);
+  return A;
+}
+
+StrictFPAttr *StrictFPAttr::CreateImplicit(ASTContext &Ctx, SourceRange Range, AttributeCommonInfo::Syntax Syntax) {
+  AttributeCommonInfo I(Range, NoSemaHandlerAttribute, Syntax);
+  return CreateImplicit(Ctx, I);
+}
+
+StrictFPAttr *StrictFPAttr::Create(ASTContext &Ctx, SourceRange Range, AttributeCommonInfo::Syntax Syntax) {
+  AttributeCommonInfo I(Range, NoSemaHandlerAttribute, Syntax);
+  return Create(Ctx, I);
+}
+
+StrictFPAttr::StrictFPAttr(ASTContext &Ctx, const AttributeCommonInfo &CommonInfo
+             )
+  : InheritableAttr(Ctx, CommonInfo, attr::StrictFP, false, false)
+  {
+}
+
+StrictFPAttr *StrictFPAttr::clone(ASTContext &C) const {
+  auto *A = new (C) StrictFPAttr(C, *this);
+  A->Inherited = Inherited;
+  A->IsPackExpansion = IsPackExpansion;
+  A->setImplicit(Implicit);
+  return A;
+}
+
+void StrictFPAttr::printPretty(raw_ostream &OS, const PrintingPolicy &Policy) const {
+}
+
+const char *StrictFPAttr::getSpelling() const {
+  return "(No spelling)";
+}
+
+
 // SuppressAttr implementation
 
 SuppressAttr *SuppressAttr::CreateImplicit(ASTContext &Ctx, StringRef *DiagnosticIdentifiers, unsigned DiagnosticIdentifiersSize, const AttributeCommonInfo &CommonInfo) {
@@ -26772,6 +26858,8 @@ const char *Attr::getSpelling() const {
     return cast<SpeculativeLoadHardeningAttr>(this)->getSpelling();
   case attr::StdCall:
     return cast<StdCallAttr>(this)->getSpelling();
+  case attr::StrictFP:
+    return cast<StrictFPAttr>(this)->getSpelling();
   case attr::Suppress:
     return cast<SuppressAttr>(this)->getSpelling();
   case attr::SwiftBridge:
@@ -27412,6 +27500,8 @@ Attr *Attr::clone(ASTContext &C) const {
     return cast<SpeculativeLoadHardeningAttr>(this)->clone(C);
   case attr::StdCall:
     return cast<StdCallAttr>(this)->clone(C);
+  case attr::StrictFP:
+    return cast<StrictFPAttr>(this)->clone(C);
   case attr::Suppress:
     return cast<SuppressAttr>(this)->clone(C);
   case attr::SwiftBridge:
@@ -28052,6 +28142,8 @@ void Attr::printPretty(raw_ostream &OS, const PrintingPolicy &Policy) const {
     return cast<SpeculativeLoadHardeningAttr>(this)->printPretty(OS, Policy);
   case attr::StdCall:
     return cast<StdCallAttr>(this)->printPretty(OS, Policy);
+  case attr::StrictFP:
+    return cast<StrictFPAttr>(this)->printPretty(OS, Policy);
   case attr::Suppress:
     return cast<SuppressAttr>(this)->printPretty(OS, Policy);
   case attr::SwiftBridge:
